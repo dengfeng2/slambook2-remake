@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.22)
+project(slambook2-remake)
+
+find_package(Eigen3 REQUIRED)
+find_package(Pangolin REQUIRED)
+find_package(Sophus REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(Ceres REQUIRED)
+find_package(g2o REQUIRED)
+
+add_subdirectory(ch2)
+add_subdirectory(ch3)
+add_subdirectory(ch4)
+add_subdirectory(ch5)
+add_subdirectory(ch6)
+add_subdirectory(ch7)
