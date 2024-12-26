@@ -1,6 +1,0 @@
-add_executable(jointMap jointMap.cpp)
-target_include_directories(jointMap PUBLIC ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(jointMap ${OpenCV_LIBS} ${Pangolin_LIBRARIES})
-configure_file(pose.txt ${CMAKE_CURRENT_BINARY_DIR}/pose.txt COPYONLY)
-file(COPY color DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY depth DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

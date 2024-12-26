@@ -1,5 +1,0 @@
-add_executable(stereoVision stereoVision.cpp)
-target_include_directories(stereoVision PUBLIC ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(stereoVision ${OpenCV_LIBS} ${Pangolin_LIBRARIES})
-configure_file(left.png ${CMAKE_CURRENT_BINARY_DIR}/left.png COPYONLY)
-configure_file(right.png ${CMAKE_CURRENT_BINARY_DIR}/right.png COPYONLY)

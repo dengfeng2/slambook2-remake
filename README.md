@@ -38,7 +38,10 @@ apt install -y openjdk-17-jdk \
                libeigen3-dev \
                libceres-dev \
                libopencv-dev \
-               freeglut3-dev
+               freeglut3-dev \
+               qtbase5-dev \
+               libmetis-dev \
+               libqglviewer-dev-qt5
 
 # 如果需要远程访问，可以使用如下命令：
 mkdir /var/run/sshd
