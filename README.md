@@ -16,6 +16,7 @@ docker run -it --gpus all \
     -v /mnt/data/workspace:/workspace \
     --env="DISPLAY" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+    -v /run/user/${UID}:/run/user/${UID}:rw \
     -p 8888:8888 \
     -p 8022:22 \
     nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
@@ -41,7 +42,12 @@ apt install -y openjdk-17-jdk \
                freeglut3-dev \
                qtbase5-dev \
                libmetis-dev \
-               libqglviewer-dev-qt5
+               libqglviewer-dev-qt5 \
+               libcanberra-gtk-module \
+               libpcl-dev \
+               pcl-tools \
+               liboctomap-dev \
+               octovis
 
 # 如果需要远程访问，可以使用如下命令：
 mkdir /var/run/sshd
@@ -55,5 +61,6 @@ service ssh start
 - https://github.com/strasdat/Sophus
 - https://github.com/stevenlovegrove/Pangolin
 - https://github.com/RainerKuemmerle/g2o
-- https://github.com/rmsalinas/DBow3
+- ~~https://github.com/rmsalinas/DBow3~~ (compile error)
+- https://github.com/dengfeng2/DBow3
 

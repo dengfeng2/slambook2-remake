@@ -1,3 +1,8 @@
 .idea
 cmake-build-*
 ch9/*.ply
+ch11/vocabulary.yml.gz
+ch12/remode_test_data.zip
+ch12/test_data
+ch12/dense_RGBD/map.pcd
+ch12/dense_RGBD/octomap.bt
