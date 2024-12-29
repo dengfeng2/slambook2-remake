@@ -33,6 +33,8 @@ apt install -y openjdk-17-jdk \
                cmake \
                g++ \
                git \
+               libgoogle-glog-dev \
+               libfmt-dev \
                libgl1-mesa-dev \
                libepoxy-dev \
                python3-pip \
@@ -63,4 +65,15 @@ service ssh start
 - https://github.com/RainerKuemmerle/g2o
 - ~~https://github.com/rmsalinas/DBow3~~ (compile error)
 - https://github.com/dengfeng2/DBow3
+
+如果在安装上述库时，不想破坏本机环境，可以先将库安装在一个特定目录下，比如：
+```shell
+mkdir build && cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=~/.source-install
+make -j8 && make install
+```
+然后在运行本仓库代码时，需要添加cmake选项：
+```shell
+cmake .. -DCMAKE_PREFIX_PATH=~/.source-install
+```
 
