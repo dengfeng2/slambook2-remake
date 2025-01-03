@@ -16,7 +16,7 @@ void find_feature_matches(
 void pose_estimation_2d2d(
     std::vector<cv::KeyPoint> keypoints_1,
     std::vector<cv::KeyPoint> keypoints_2,
-    std::vector<cv::DMatch> matches,
+    const std::vector<cv::DMatch>& matches,
     cv::Mat &R, cv::Mat &t);
 
 // 像素坐标转相机归一化坐标
@@ -109,7 +109,7 @@ cv::Point2d pixel2cam(const cv::Point2d &p, const cv::Mat &K) {
 
 void pose_estimation_2d2d(std::vector<cv::KeyPoint> keypoints_1,
                           std::vector<cv::KeyPoint> keypoints_2,
-                          std::vector<cv::DMatch> matches,
+                          const std::vector<cv::DMatch>& matches,
                           cv::Mat &R, cv::Mat &t) {
     // 相机内参,TUM Freiburg2
     cv::Mat K = (cv::Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
@@ -118,9 +118,9 @@ void pose_estimation_2d2d(std::vector<cv::KeyPoint> keypoints_1,
     vector<cv::Point2f> points1;
     vector<cv::Point2f> points2;
 
-    for (int i = 0; i < matches.size(); i++) {
-        points1.push_back(keypoints_1[matches[i].queryIdx].pt);
-        points2.push_back(keypoints_2[matches[i].trainIdx].pt);
+    for (const auto & match : matches) {
+        points1.push_back(keypoints_1[match.queryIdx].pt);
+        points2.push_back(keypoints_2[match.trainIdx].pt);
     }
 
     //-- 计算基础矩阵

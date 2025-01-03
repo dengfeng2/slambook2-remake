@@ -176,7 +176,7 @@ void OpticalFlowTracker::calculateOpticalFlow(const cv::Range &range) {
         Eigen::Vector2d b = Eigen::Vector2d::Zero(); // bias
         Eigen::Vector2d J; // jacobian
         for (int iter = 0; iter < iterations; iter++) {
-            if (inverse == false) {
+            if (!inverse) {
                 H = Eigen::Matrix2d::Zero();
                 b = Eigen::Vector2d::Zero();
             } else {
@@ -191,7 +191,7 @@ void OpticalFlowTracker::calculateOpticalFlow(const cv::Range &range) {
                 for (int y = -half_patch_size; y < half_patch_size; y++) {
                     double error = GetPixelValue(img1, kp.pt.x + x, kp.pt.y + y) -
                                    GetPixelValue(img2, kp.pt.x + x + dx, kp.pt.y + y + dy);; // Jacobian
-                    if (inverse == false) {
+                    if (!inverse) {
                         J = -1.0 * Eigen::Vector2d(
                                 0.5 * (GetPixelValue(img2, kp.pt.x + dx + x + 1, kp.pt.y + dy + y) -
                                        GetPixelValue(img2, kp.pt.x + dx + x - 1, kp.pt.y + dy + y)),
@@ -211,7 +211,7 @@ void OpticalFlowTracker::calculateOpticalFlow(const cv::Range &range) {
                     // compute H, b and set cost;
                     b += -error * J;
                     cost += error * error;
-                    if (inverse == false || iter == 0) {
+                    if (!inverse || iter == 0) {
                         // also update H
                         H += J * J.transpose();
                     }

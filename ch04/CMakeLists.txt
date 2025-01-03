@@ -1,5 +1,3 @@
-set(CMAKE_BUILD_TYPE "Debug")
-
 add_executable(useSophus useSophus.cpp)
 target_link_libraries(useSophus PUBLIC Sophus::Sophus)
 

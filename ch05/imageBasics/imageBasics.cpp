@@ -25,8 +25,8 @@ int main(int argc, const char *argv[]) {
     // 使用 std::chrono 来给算法计时
 
     chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
-    for (size_t y = 0; y < image.rows; y++) {
-        unsigned char *row_ptr = image.ptr<unsigned char>(y); // row_ptr是第y行的头指针
+    for (auto y = 0; y < image.rows; y++) {
+        auto *row_ptr = image.ptr<unsigned char>(y); // row_ptr是第y行的头指针
         for (size_t x = 0; x < image.cols; x++) {
             unsigned char *data_ptr = &row_ptr[x * image.channels()]; // data_ptr 指向待访问的像素数据
             for (int c = 0; c != image.channels(); c++) {

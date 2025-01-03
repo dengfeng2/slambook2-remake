@@ -13,7 +13,7 @@ namespace myslam {
         // read camera intrinsics and extrinsic(s)
         std::ifstream calib_file(dataset_path_ + "/calib.txt");
         if (!calib_file.is_open()) {
-            LOG(ERROR) << "cannot find " << dataset_path_ << "/calib.txt!";
+            LOG(ERROR) << "cannot find " << dataset_path_ << "/calib.txt";
             return false;
         }
 
@@ -26,8 +26,8 @@ namespace myslam {
                 Eigen::Matrix3d k;
                 Eigen::Vector3d t;
                 iss >> k(0, 0) >> k(0, 1) >> k(0, 2) >> t(0)
-                        >> k(1, 0) >> k(1, 1) >> k(1, 2) >> t(1)
-                        >> k(2, 0) >> k(2, 1) >> k(2, 2) >> t(2);
+                    >> k(1, 0) >> k(1, 1) >> k(1, 2) >> t(1)
+                    >> k(2, 0) >> k(2, 1) >> k(2, 2) >> t(2);
 
                 auto camera = std::make_shared<Camera>(k, t);
                 cameras_.push_back(camera);

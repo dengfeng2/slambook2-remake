@@ -1,5 +1,4 @@
 #include "visual_odometry_impl.h"
-#include "visual_odometry_impl.h"
 
 #include <glog/logging.h>
 
@@ -48,7 +47,7 @@ namespace myslam {
         bool success = frontend_->AddFrame(new_frame);
         auto t2 = std::chrono::steady_clock::now();
         auto time_used =
-            std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+                std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
         LOG(INFO) << "VO cost time: " << time_used.count() << " seconds.";
         return success;
     }

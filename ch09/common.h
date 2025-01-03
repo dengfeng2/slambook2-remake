@@ -27,9 +27,9 @@ public:
     std::vector<double> &mutable_world_points() { return world_points_; }
 
 private:
-    int num_cameras_;
-    int num_points_;
-    int num_observations_;
+    int num_cameras_{0};
+    int num_points_{0};
+    int num_observations_{0};
     std::vector<int> point_index_;
     std::vector<int> camera_index_;;
     std::vector<double> observations_;

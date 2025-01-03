@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < 5; i++) {
         cout << "转换图像中: " << i + 1 << endl;
-        cv::Mat color = colorImgs[i];
+        const cv::Mat& color = colorImgs[i];
         cv::Mat depth = depthImgs[i];
         Eigen::Isometry3d T = poses[i];
 

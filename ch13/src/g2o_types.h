@@ -1,5 +1,6 @@
 #ifndef G2O_TYPES_H
 #define G2O_TYPES_H
+
 #include <g2o/core/base_binary_edge.h>
 #include <g2o/core/base_unary_edge.h>
 #include <g2o/core/base_vertex.h>
@@ -39,6 +40,7 @@ namespace myslam {
     class VertexXYZ : public g2o::BaseVertex<3, Eigen::Vector3d> {
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
         void setToOriginImpl() override { _estimate = Eigen::Vector3d::Zero(); }
 
         void oplusImpl(const double *update) override {
@@ -58,7 +60,7 @@ namespace myslam {
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
         EdgeProjectionPoseOnly(Eigen::Vector3d pos, Eigen::Matrix3d K)
-            : _pos3d(std::move(pos)), _K(std::move(K)) {
+                : _pos3d(std::move(pos)), _K(std::move(K)) {
         }
 
         void computeError() override {
@@ -99,7 +101,7 @@ namespace myslam {
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-        EdgeProjection(const Eigen::Matrix3d &K, const Eigen::Vector3d &t) : _K(K), _t(t) {
+        EdgeProjection(Eigen::Matrix3d K, Eigen::Vector3d t) : _K(std::move(K)), _t(std::move(t)) {
         }
 
         void computeError() override {

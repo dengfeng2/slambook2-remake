@@ -1,5 +1,3 @@
-set(CMAKE_BUILD_TYPE "Debug")
-
 add_executable(helloSLAM helloSLAM.cpp)
 
 add_library(hello libHelloSLAM.cpp)

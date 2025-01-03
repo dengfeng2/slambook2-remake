@@ -11,7 +11,7 @@ using TrajectoryType = vector<Sophus::SE3d, Eigen::aligned_allocator<Sophus::SE3
 using Vector6d = Eigen::Matrix<double, 6, 1>;
 
 void showPointCloud(
-    const vector<Vector6d, Eigen::aligned_allocator<Vector6d> > &pointcloud);
+    const vector<Vector6d, Eigen::aligned_allocator<Vector6d> > &pointCloud);
 
 int main(int argc, char *argv[]) {
     vector<cv::Mat> colorImgs, depthImgs; // 彩色图和深度图
@@ -42,14 +42,14 @@ int main(int argc, char *argv[]) {
     double fx = 518.0;
     double fy = 519.0;
     double depthScale = 1000.0;
-    vector<Vector6d, Eigen::aligned_allocator<Vector6d> > pointcloud;
-    pointcloud.reserve(1000000);
+    vector<Vector6d, Eigen::aligned_allocator<Vector6d> > pointCloud;
+    pointCloud.reserve(1000000);
 
     for (int i = 0; i < 5; i++) {
         cout << "转换图像中: " << i + 1 << endl;
-        cv::Mat color = colorImgs[i];
+        const cv::Mat& color = colorImgs[i];
         cv::Mat depth = depthImgs[i];
-        Sophus::SE3d T = poses[i];
+        const Sophus::SE3d& T = poses[i];
         for (int v = 0; v < color.rows; v++)
             for (int u = 0; u < color.cols; u++) {
                 unsigned int d = depth.ptr<unsigned short>(v)[u]; // 深度值
@@ -65,18 +65,18 @@ int main(int argc, char *argv[]) {
                 p[5] = color.data[v * color.step + u * color.channels()]; // blue
                 p[4] = color.data[v * color.step + u * color.channels() + 1]; // green
                 p[3] = color.data[v * color.step + u * color.channels() + 2]; // red
-                pointcloud.push_back(p);
+                pointCloud.push_back(p);
             }
     }
 
-    cout << "点云共有" << pointcloud.size() << "个点." << endl;
-    showPointCloud(pointcloud);
+    cout << "点云共有" << pointCloud.size() << "个点." << endl;
+    showPointCloud(pointCloud);
     return 0;
 }
 
 
-void showPointCloud(const vector<Vector6d, Eigen::aligned_allocator<Vector6d> > &pointcloud) {
-    if (pointcloud.empty()) {
+void showPointCloud(const vector<Vector6d, Eigen::aligned_allocator<Vector6d> > &pointCloud) {
+    if (pointCloud.empty()) {
         cerr << "Point cloud is empty!" << endl;
         return;
     }
@@ -95,7 +95,7 @@ void showPointCloud(const vector<Vector6d, Eigen::aligned_allocator<Vector6d> > 
             .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f / 768.0f)
             .SetHandler(new pangolin::Handler3D(s_cam));
 
-    while (pangolin::ShouldQuit() == false) {
+    while (!pangolin::ShouldQuit()) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         d_cam.Activate(s_cam);
@@ -103,7 +103,7 @@ void showPointCloud(const vector<Vector6d, Eigen::aligned_allocator<Vector6d> > 
 
         glPointSize(2);
         glBegin(GL_POINTS);
-        for (auto &p: pointcloud) {
+        for (auto &p: pointCloud) {
             glColor3d(p[3] / 255.0, p[4] / 255.0, p[5] / 255.0);
             glVertex3d(p[0], p[1], p[2]);
         }

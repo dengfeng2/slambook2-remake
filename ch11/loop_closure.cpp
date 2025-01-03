@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
         descriptors.push_back(descriptor);
     }
 
-    // we can compare the images directly or we can compare one image to a database
+    // we can compare the images directly, or we can compare one image to a database
     // images :
     cout << "comparing images with images " << endl;
     for (int i = 0; i < images.size(); i++) {

@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
         rgb_files.push_back(dataset_dir + "/" + rgb_file);
         depth_files.push_back(dataset_dir + "/" + depth_file);
 
-        if (fin.good() == false)
+        if (!fin.good())
             break;
     }
     fin.close();

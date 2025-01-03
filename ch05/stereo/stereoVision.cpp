@@ -12,7 +12,7 @@ string left_file = "./left.png";
 string right_file = "./right.png";
 
 void showPointCloud(
-    const vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > &pointcloud);
+    const vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > &pointCloud);
 
 int main(int argc, char *argv[]) {
     // 内参
@@ -59,8 +59,8 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-void showPointCloud(const vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > &pointcloud) {
-    if (pointcloud.empty()) {
+void showPointCloud(const vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > &pointCloud) {
+    if (pointCloud.empty()) {
         cerr << "Point cloud is empty!" << endl;
         return;
     }
@@ -87,8 +87,8 @@ void showPointCloud(const vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen
 
         glPointSize(2);
         glBegin(GL_POINTS);
-        for (auto &p: pointcloud) {
-            glColor3f(p[3], p[3], p[3]);
+        for (auto &p: pointCloud) {
+            glColor3d(p[3], p[3], p[3]);
             glVertex3d(p[0], p[1], p[2]);
         }
         glEnd();

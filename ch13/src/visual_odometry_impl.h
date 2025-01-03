@@ -1,5 +1,6 @@
 #ifndef VISUAL_ODOMETRY_IMPL_H
 #define VISUAL_ODOMETRY_IMPL_H
+
 #include <string>
 #include <memory>
 
@@ -7,15 +8,18 @@
 
 namespace myslam {
     class Dataset;
+
     class Frontend;
+
     class Viewer;
+
     class Backend;
 
     class VisualOdometryImpl : public VisualOdometry {
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-        explicit VisualOdometryImpl(std::string dataset_path): dataset_path_(std::move(dataset_path)) {
+        explicit VisualOdometryImpl(std::string dataset_path) : dataset_path_(std::move(dataset_path)) {
         };
 
         bool Init() override;

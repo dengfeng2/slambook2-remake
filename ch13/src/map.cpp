@@ -6,33 +6,35 @@
 
 namespace myslam {
     void Map::InsertKeyFrame(const std::shared_ptr<Frame> &frame) {
-        current_frame_ = frame;
-        active_keyframes_[frame->key_frame_id()] = frame;
+        CHECK_EQ(active_keyframes_.find(frame->id()) == active_keyframes_.end(), true);
+        frame->SetKeyFrame();
+        active_keyframes_[frame->id()] = frame;
 
         if (active_keyframes_.size() > num_active_keyframes_) {
-            RemoveOldKeyframe();
+            RemoveOldKeyframe(frame);
         }
     }
 
     void Map::InsertMapPoint(const std::shared_ptr<MapPoint> &map_point) {
+        CHECK_EQ(active_landmarks_.find(map_point->id()) == active_landmarks_.end(), true);
         active_landmarks_[map_point->id()] = map_point;
     }
 
-    void Map::RemoveOldKeyframe() {
-        if (current_frame_ == nullptr) { return; }
+    void Map::RemoveOldKeyframe(const std::shared_ptr<Frame> &current_frame) {
+        CHECK_NOTNULL(current_frame);
         double max_dis = 0, min_dis = 9999;
-        long max_kf_id = 0, min_kf_id = 0;
-        auto Twc = current_frame_->Pose().inverse();
-        for (auto &kf: active_keyframes_) {
-            if (kf.second == current_frame_) { continue; }
-            auto dis = (kf.second->Pose() * Twc).log().norm();
+        unsigned long max_kf_id = 0, min_kf_id = 0;
+        auto Twc = current_frame->Pose().inverse();
+        for (auto &[frame_id, kf]: active_keyframes_) {
+            if (frame_id == current_frame->id()) { continue; }
+            auto dis = (kf->Pose() * Twc).log().norm();
             if (dis > max_dis) {
                 max_dis = dis;
-                max_kf_id = kf.first;
+                max_kf_id = frame_id;
             }
             if (dis < min_dis) {
                 min_dis = dis;
-                min_kf_id = kf.first;
+                min_kf_id = frame_id;
             }
         }
         constexpr double min_dis_th = 0.2;
@@ -40,13 +42,14 @@ namespace myslam {
 
         LOG(INFO) << "remove keyframe " << kf_id_to_remove;
         // remove keyframe and landmark observation
-        for (auto feat: active_keyframes_[kf_id_to_remove]->left_features()) {
+        for (const auto &feat: active_keyframes_[kf_id_to_remove]->left_features()) {
+            CHECK_NOTNULL(feat);
             if (auto mp = feat->map_point(); mp) {
                 mp->RemoveObservation(feat);
             }
         }
-        for (auto feat: active_keyframes_[kf_id_to_remove]->right_features()) {
-            if (feat == nullptr) {continue;}
+        for (const auto &feat: active_keyframes_[kf_id_to_remove]->right_features()) {
+            if (feat == nullptr) { continue; }
             if (auto mp = feat->map_point();mp) {
                 mp->RemoveObservation(feat);
             }

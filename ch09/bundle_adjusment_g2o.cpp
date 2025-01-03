@@ -130,7 +130,7 @@ void SolveBA(BALProblem &bal_problem) {
 
     auto &camera_param = bal_problem.mutable_camera_param();
     for (int i = 0; i < bal_problem.num_cameras(); ++i) {
-        VertexPoseAndIntrinsics *v = new VertexPoseAndIntrinsics();
+        auto *v = new VertexPoseAndIntrinsics();
         v->setId(i);
         v->setEstimate(PoseAndIntrinsics(camera_param.data() + 9 * i));
         optimizer.addVertex(v);
@@ -139,7 +139,7 @@ void SolveBA(BALProblem &bal_problem) {
 
     auto &world_point = bal_problem.mutable_world_points();
     for (int i = 0; i < bal_problem.num_points(); ++i) {
-        VertexPoint *v = new VertexPoint();
+        auto *v = new VertexPoint();
         v->setId(i + bal_problem.num_cameras());
         v->setEstimate(Eigen::Vector3d(world_point[3 * i], world_point[3 * i + 1], world_point[3 * i + 2]));
         v->setMarginalized(true);
@@ -149,7 +149,7 @@ void SolveBA(BALProblem &bal_problem) {
 
     const auto &observations = bal_problem.observations();
     for (int i = 0; i < bal_problem.num_observations(); ++i) {
-        EdgeProjection *edge = new EdgeProjection();
+        auto *edge = new EdgeProjection();
         auto camera_idx = bal_problem.camera_index()[i];
         auto point_idx = bal_problem.point_index()[i];
         edge->setVertex(0, vertex_pose_intrinsics[camera_idx]);

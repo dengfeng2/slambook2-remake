@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     // 配置求解器
     ceres::Solver::Options options; // 这里有很多配置项可以填
     options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY; // 增量方程如何求解
-    options.minimizer_progress_to_stdout = true; // 输出到cout
+    options.minimizer_progress_to_stdout = true; // 输出到stdout
 
     ceres::Solver::Summary summary; // 优化信息
     chrono::steady_clock::time_point t1 = chrono::steady_clock::now();

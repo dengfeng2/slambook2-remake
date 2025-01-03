@@ -35,7 +35,7 @@ BALProblem::BALProblem(const std::string &filename) {
 
     // camera : 9 dims array
     // [0-2] : angle-axis rotation
-    // [3-5] : translateion
+    // [3-5] : translation
     // [6-8] : camera parameter, [6] focal length, [7-8] second and forth order radial distortion
     camera_params_.resize(9 * num_cameras_);
     world_points_.resize(3 * num_points_);

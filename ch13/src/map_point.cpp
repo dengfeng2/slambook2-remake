@@ -10,25 +10,26 @@ namespace myslam {
         return std::shared_ptr<MapPoint>(new MapPoint(factory_id++, std::move(pos)));
     }
 
-    MapPoint::MapPoint(unsigned long id, Eigen::Vector3d pos): id_(id), pos_(std::move(pos)) {
+    MapPoint::MapPoint(unsigned long id, Eigen::Vector3d pos) : id_(id), pos_(std::move(pos)) {
     }
 
-    Eigen::Vector3d MapPoint::Pos() const {
+    Eigen::Vector3d MapPoint::Pos() {
+        std::unique_lock<std::mutex> lock(pose_mutex_);
         return pos_;
     }
 
     void MapPoint::SetPos(const Eigen::Vector3d &pos) {
-        std::unique_lock<std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(pose_mutex_);
         pos_ = pos;
     }
 
     void MapPoint::AddObservation(const std::shared_ptr<Feature> &feature) {
-        std::unique_lock<std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(pose_mutex_);
         observations_.push_back(feature);
     }
 
     void MapPoint::RemoveObservation(const std::shared_ptr<Feature> &feat) {
-        std::unique_lock<std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(pose_mutex_);
         for (auto iter = observations_.begin(); iter != observations_.end(); ++iter) {
             if (iter->lock() == feat) {
                 observations_.erase(iter);
@@ -37,6 +38,7 @@ namespace myslam {
             }
         }
     }
+
     bool MapPoint::IsNoObservation() const {
         return observations_.empty();
     }

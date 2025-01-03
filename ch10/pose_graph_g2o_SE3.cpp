@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
         fin >> name;
         if (name == "VERTEX_SE3:QUAT") {
             // SE3 顶点
-            g2o::VertexSE3 *v = new g2o::VertexSE3();
+            auto *v = new g2o::VertexSE3();
             int index = 0;
             fin >> index;
             v->setId(index);
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
                 v->setFixed(true);
         } else if (name == "EDGE_SE3:QUAT") {
             // SE3-SE3 边
-            g2o::EdgeSE3 *e = new g2o::EdgeSE3();
+            auto *e = new g2o::EdgeSE3();
             int idx1, idx2;     // 关联的两个顶点
             fin >> idx1 >> idx2;
             e->setId(edgeCnt++);

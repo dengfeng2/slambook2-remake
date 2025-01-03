@@ -17,7 +17,7 @@ namespace myslam {
 
         unsigned long id() const { return id_; }
 
-        Eigen::Vector3d Pos() const;
+        Eigen::Vector3d Pos();
 
         void SetPos(const Eigen::Vector3d &pos);
 
@@ -27,16 +27,12 @@ namespace myslam {
 
         bool IsNoObservation() const;
 
-        std::list<std::weak_ptr<Feature>> GetObs() {
-            std::unique_lock<std::mutex> lock(mutex_);
-            return observations_;
-        }
     private:
         MapPoint(unsigned long id, Eigen::Vector3d pos);
 
         const unsigned long id_;
         Eigen::Vector3d pos_;
-        std::mutex mutex_;
+        std::mutex pose_mutex_;
         std::list<std::weak_ptr<Feature> > observations_;;
     };
 } // namespace myslam

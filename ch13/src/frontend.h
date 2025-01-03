@@ -11,20 +11,26 @@
 
 namespace myslam {
     struct Camera;
+
     class Frame;
+
     class Map;
+
     class Viewer;
+
     class Backend;
 
     class Frontend {
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-        Frontend(std::shared_ptr<Camera> camera_left, std::shared_ptr<Camera> camera_right, std::shared_ptr<Map> map, std::shared_ptr<Viewer> viewer, std::shared_ptr<Backend> backend_);
+        Frontend(std::shared_ptr<Camera> camera_left, std::shared_ptr<Camera> camera_right, std::shared_ptr<Map> map,
+                 std::shared_ptr<Viewer> viewer, std::shared_ptr<Backend> backend_);
 
         bool AddFrame(std::shared_ptr<Frame> frame);
 
         FrontendStatus GetStatus() const { return status_; }
+
     private:
         bool StereoInit();
 
@@ -38,18 +44,11 @@ namespace myslam {
         // 使用光流法检测右图特征点
         int FindFeaturesInRight() const;
 
-        // 根据左右图特征点，使用三角测量，得到空间三维点
-        void BuildInitMap() const;
-
         int TrackLastFrame() const;
 
         size_t EstimateCurrentPose() const;
 
-        void InsertKeyFrame() const;
-
-        void SetObservationsForKeyFrame() const;
-
-        size_t TriangulateNewPoints() const;
+        size_t InsertKeyFrame() const;
 
         std::shared_ptr<Frame> current_frame_;
         std::shared_ptr<Frame> last_frame_;

@@ -1,10 +1,12 @@
 #ifndef MAP_H
 #define MAP_H
+
 #include <memory>
 #include <Eigen/Core>
 
 namespace myslam {
     struct MapPoint;
+
     class Frame;
 
     class Map {
@@ -17,16 +19,17 @@ namespace myslam {
 
         void InsertKeyFrame(const std::shared_ptr<Frame> &frame);
 
-        LandmarksType GetActiveMapPoints() const {return active_landmarks_;}
-        KeyframesType GetActiveKeyFrames() const {return active_keyframes_;}
+        LandmarksType GetActiveLandmarks() const { return active_landmarks_; }
 
-        private:
-        void RemoveOldKeyframe();
+        KeyframesType GetActiveKeyFrames() const { return active_keyframes_; }
+
+    private:
+        void RemoveOldKeyframe(const std::shared_ptr<Frame> &current_frame);
+
         void CleanMap();
 
         const int num_active_keyframes_ = 7;
 
-        std::shared_ptr<Frame> current_frame_;
         LandmarksType active_landmarks_;  // active landmarks
         KeyframesType active_keyframes_;  // all key-frames
     };

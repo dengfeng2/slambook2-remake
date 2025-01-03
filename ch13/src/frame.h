@@ -1,9 +1,14 @@
 #ifndef FRAME_H
 #define FRAME_H
+
 #include <opencv2/opencv.hpp>
 #include <utility>
 #include <sophus/se3.hpp>
+#include <mutex>
+#include <utility>
+#include <exception>
 #include "feature.h"
+
 
 namespace myslam {
     class Frame {
@@ -16,9 +21,13 @@ namespace myslam {
         }
 
         unsigned long id() const { return id_; }
+
         cv::Mat left_img() const { return left_img_; }
+
         cv::Mat right_img() const { return right_img_; }
+
         std::vector<std::shared_ptr<Feature> > left_features() const { return left_features_; }
+
         std::vector<std::shared_ptr<Feature> > right_features() const { return right_features_; }
 
         void AddLeftFeature(std::shared_ptr<Feature> feature) {
@@ -34,30 +43,35 @@ namespace myslam {
             right_features_[index]->set_map_point(map_point);
         }
 
-        Sophus::SE3d Pose() const { return pose_; }
-        void SetPose(const Sophus::SE3d &pose) { pose_ = pose; }
+        Sophus::SE3d Pose() {
+            std::unique_lock<std::mutex> lock(pose_mutex_);
+            return pose_;
+        }
+
+        void SetPose(const Sophus::SE3d &pose) {
+            std::unique_lock<std::mutex> lock(pose_mutex_);
+            pose_ = pose;
+        }
 
         void SetKeyFrame() {
-            static unsigned long factory_id = 0;
-            keyframe_id = factory_id++;
             is_keyframe_ = true;
         }
+
         bool is_keyframe() const { return is_keyframe_; }
 
-        unsigned long key_frame_id() const { return keyframe_id; }
 
     private:
-        Frame(unsigned long id, cv::Mat left_img, cv::Mat right_img): id_(id), left_img_(std::move(left_img)),
-                                                             right_img_(std::move(right_img)) {
+        Frame(unsigned long id, cv::Mat left_img, cv::Mat right_img) : id_(id), left_img_(std::move(left_img)),
+                                                                       right_img_(std::move(right_img)) {
         }
 
         const unsigned long id_;
         const cv::Mat left_img_, right_img_; // stereo images
 
+        std::mutex pose_mutex_;
         std::vector<std::shared_ptr<Feature> > left_features_;
         std::vector<std::shared_ptr<Feature> > right_features_;
         bool is_keyframe_ = false;
-        unsigned long keyframe_id = 0;
         Sophus::SE3d pose_;
     };
 }

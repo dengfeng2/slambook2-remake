@@ -9,7 +9,7 @@
 #include "map_point.h"
 
 namespace myslam {
-    Viewer::Viewer(std::shared_ptr<Map> map): map_(std::move(map)) {
+    Viewer::Viewer(std::shared_ptr<Map> map) : map_(std::move(map)) {
         viewer_thread_ = std::thread(std::bind(&Viewer::ThreadLoop, this));
     }
 
@@ -23,7 +23,7 @@ namespace myslam {
         assert(map_ != nullptr);
         assert(map_ != nullptr);
         active_keyframes_ = map_->GetActiveKeyFrames();
-        active_landmarks_ = map_->GetActiveMapPoints();
+        active_landmarks_ = map_->GetActiveLandmarks();
     }
 
     void Viewer::Close() {
@@ -38,14 +38,14 @@ namespace myslam {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         pangolin::OpenGlRenderState vis_camera(
-            pangolin::ProjectionMatrix(1024, 768, 400, 400, 512, 384, 0.1, 1000),
-            pangolin::ModelViewLookAt(0, -5, -10, 0, 0, 0, 0.0, -1.0, 0.0));
+                pangolin::ProjectionMatrix(1024, 768, 400, 400, 512, 384, 0.1, 1000),
+                pangolin::ModelViewLookAt(0, -5, -10, 0, 0, 0, 0.0, -1.0, 0.0));
 
         // Add named OpenGL viewport to window and provide 3D Handler
         pangolin::View &vis_display =
                 pangolin::CreateDisplay()
-                .SetBounds(0.0, 1.0, 0.0, 1.0, -1024.0f / 768.0f)
-                .SetHandler(new pangolin::Handler3D(vis_camera));
+                        .SetBounds(0.0, 1.0, 0.0, 1.0, -1024.0f / 768.0f)
+                        .SetHandler(new pangolin::Handler3D(vis_camera));
 
         constexpr float green[3] = {0, 1, 0};
 

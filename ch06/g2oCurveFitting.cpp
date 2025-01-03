@@ -46,14 +46,14 @@ public:
 
     // 计算曲线模型误差
     void computeError() final {
-        const CurveFittingVertex *v = static_cast<const CurveFittingVertex *>(_vertices[0]);
+        const auto *v = dynamic_cast<const CurveFittingVertex *>(_vertices[0]);
         const Eigen::Vector3d abc = v->estimate();
         _error(0, 0) = _measurement - std::exp(abc(0, 0) * _x * _x + abc(1, 0) * _x + abc(2, 0));
     }
 
     // 计算雅可比矩阵
     void linearizeOplus() final {
-        const CurveFittingVertex *v = static_cast<const CurveFittingVertex *>(_vertices[0]);
+        const auto *v = dynamic_cast<const CurveFittingVertex *>(_vertices[0]);
         const Eigen::Vector3d abc = v->estimate();
         double y = exp(abc[0] * _x * _x + abc[1] * _x + abc[2]);
         _jacobianOplusXi[0] = -_x * _x * y;
@@ -89,25 +89,25 @@ int main(int argc, char *argv[]) {
     }
 
     // 构建图优化，先设定g2o
-    using BlockSolverType = g2o::BlockSolver<g2o::BlockSolverTraits<3, 1> > ; // 每个误差项优化变量维度为3，误差值维度为1
-    using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> ; // 线性求解器类型
+    using BlockSolverType = g2o::BlockSolver<g2o::BlockSolverTraits<3, 1> >; // 每个误差项优化变量维度为3，误差值维度为1
+    using LinearSolverType = g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>; // 线性求解器类型
 
     // 梯度下降方法，可以从GN, LM, DogLeg 中选
     auto solver = new g2o::OptimizationAlgorithmGaussNewton(
-        make_unique<BlockSolverType>(make_unique<LinearSolverType>()));
+            make_unique<BlockSolverType>(make_unique<LinearSolverType>()));
     g2o::SparseOptimizer optimizer; // 图模型
     optimizer.setAlgorithm(solver); // 设置求解器
     optimizer.setVerbose(true); // 打开调试输出
 
     // 往图中增加顶点
-    CurveFittingVertex *v = new CurveFittingVertex();
+    auto *v = new CurveFittingVertex();
     v->setEstimate(Eigen::Vector3d(ae, be, ce));
     v->setId(0);
     optimizer.addVertex(v);
 
     // 往图中增加边
     for (int i = 0; i < N; i++) {
-        CurveFittingEdge *edge = new CurveFittingEdge(x_data[i]);
+        auto *edge = new CurveFittingEdge(x_data[i]);
         edge->setId(i);
         edge->setVertex(0, v); // 设置连接的顶点
         edge->setMeasurement(y_data[i]); // 观测数值

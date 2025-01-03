@@ -34,7 +34,7 @@ namespace myslam {
         std::mutex mutex_;
         std::thread backend_thread_;
         std::condition_variable map_update_;
-        std::atomic<bool> backend_running_;
+        std::atomic<bool> backend_running_{false};
     };
 }  // namespace myslam
 #endif //BACKEND_H

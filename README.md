@@ -49,7 +49,8 @@ apt install -y openjdk-17-jdk \
                libpcl-dev \
                pcl-tools \
                liboctomap-dev \
-               octovis
+               octovis \
+               libpcap-dev
 
 # 如果需要远程访问，可以使用如下命令：
 mkdir /var/run/sshd
@@ -71,6 +72,11 @@ service ssh start
 mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=~/.source-install
 make -j8 && make install
+```
+记得设置链接库的目录：
+```shell
+echo "${HOME}/.source-install/lib" | sudo tee -a /etc/ld.so.conf.d/source-install.conf
+sudo ldconfig
 ```
 然后在运行本仓库代码时，需要添加cmake选项：
 ```shell
