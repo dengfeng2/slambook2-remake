@@ -1,32 +1,47 @@
-#ifndef SLAMBOOK2_REMAKE_FEATURE_H
-#define SLAMBOOK2_REMAKE_FEATURE_H
-#include <memory>
+#ifndef FEATURE_H
+#define FEATURE_H
 #include <Eigen/Core>
+#include <memory>
 #include <opencv2/opencv.hpp>
 
 namespace myslam {
+    class MapPoint;
+    class Frame;
 
-struct Frame;
-struct MapPoint;
+    class Feature {
+    public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-/**
- * 2D 特征点
- * 在三角化之后会被关联一个地图点
- */
-struct Feature {
+        static std::shared_ptr<Feature> Create(const cv::KeyPoint &keypoint, std::shared_ptr<Frame> frame, bool is_left);
 
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+        cv::KeyPoint keypoint() const { return keypoint_; }
 
-    std::weak_ptr<Frame> frame_;         // 持有该feature的frame
-    cv::KeyPoint position_;              // 2D提取位置
-    std::weak_ptr<MapPoint> map_point_;  // 关联地图点
+        std::shared_ptr<Frame> GetFrame() const;
 
-    bool is_outlier_ = false;       // 是否为异常点
-    bool is_on_left_image_ = true;  // 标识是否提在左图，false为右图
+        bool is_left() const{return is_left_;}
 
-    Feature(std::shared_ptr<Frame> frame, const cv::KeyPoint &kp)
-            : frame_(frame), position_(kp) {}
-};
-}  // namespace myslam
+        std::shared_ptr<MapPoint> map_point() const {
+            return map_point_.lock();
+        }
 
-#endif //SLAMBOOK2_REMAKE_FEATURE_H
+        void reset_map_point() {
+            map_point_.reset();
+        }
+
+        void set_map_point(const std::shared_ptr<MapPoint> &map_point) { map_point_ = map_point; }
+        bool is_outlier() const { return is_outlier_; }
+        void set_outlier(bool outlier) { is_outlier_ = outlier; }
+
+    private:
+        Feature(unsigned long id, const cv::KeyPoint &keypoint, std::shared_ptr<Frame> frame, bool is_left);
+
+        const unsigned long id_;
+        const cv::KeyPoint keypoint_;
+        const bool is_left_;
+        bool is_outlier_ = false; // abnormal
+        std::weak_ptr<Frame> frame_;
+        std::weak_ptr<MapPoint> map_point_;
+    };
+} // myslam
+
+#endif //FEATURE_H

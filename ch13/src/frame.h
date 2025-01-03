@@ -1,66 +1,65 @@
-#ifndef SLAMBOOK2_REMAKE_FRAME_H
-#define SLAMBOOK2_REMAKE_FRAME_H
-#include <Eigen/Core>
-#include <memory>
-#include <mutex>
-#include <sophus/se3.hpp>
+#ifndef FRAME_H
+#define FRAME_H
 #include <opencv2/opencv.hpp>
+#include <utility>
+#include <sophus/se3.hpp>
+#include "feature.h"
 
 namespace myslam {
-    struct Feature;
-
-    /**
-     * 帧
-     * 每一帧分配独立id，关键帧分配关键帧ID
-     */
-    struct Frame {
-
+    class Frame {
+    public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-        unsigned long id_ = 0;           // id of this frame
-        unsigned long keyframe_id_ = 0;  // id of key frame
-        bool is_keyframe_ = false;       // 是否为关键帧
-        double time_stamp_;              // 时间戳，暂不使用
-        Sophus::SE3d pose_;                       // Tcw 形式Pose
-        std::mutex pose_mutex_;          // Pose数据锁
-        cv::Mat left_img_, right_img_;   // stereo images
-
-        // extracted features in left image
-        std::vector<std::shared_ptr<Feature>> features_left_;
-        // corresponding features in right image, set to nullptr if no corresponding
-        std::vector<std::shared_ptr<Feature>> features_right_;
-
-        explicit Frame(long id) : id_(id) {}
-
-        Frame(long id, double time_stamp, const Sophus::SE3d &pose, const cv::Mat &left, const cv::Mat &right)
-                : id_(id), time_stamp_(time_stamp), pose_(pose), left_img_(left), right_img_(right) {}
-
-        // set and get pose, thread safe
-        Sophus::SE3d Pose() {
-            std::unique_lock<std::mutex> lck(pose_mutex_);
-            return pose_;
+        static std::shared_ptr<Frame> Create(cv::Mat left_img, cv::Mat right_img) {
+            static unsigned long factory_id = 0;
+            return std::shared_ptr<Frame>(new Frame(factory_id++, std::move(left_img), std::move(right_img)));
         }
 
-        void SetPose(const Sophus::SE3d &pose) {
-            std::unique_lock<std::mutex> lck(pose_mutex_);
-            pose_ = pose;
+        unsigned long id() const { return id_; }
+        cv::Mat left_img() const { return left_img_; }
+        cv::Mat right_img() const { return right_img_; }
+        std::vector<std::shared_ptr<Feature> > left_features() const { return left_features_; }
+        std::vector<std::shared_ptr<Feature> > right_features() const { return right_features_; }
+
+        void AddLeftFeature(std::shared_ptr<Feature> feature) {
+            left_features_.push_back(std::move(feature));
         }
 
-        /// 设置关键帧并分配并键帧id
+        void AddRightFeature(std::shared_ptr<Feature> feature) {
+            right_features_.push_back(std::move(feature));
+        }
+
+        void AddMapPoint(size_t index, const std::shared_ptr<MapPoint> &map_point) const {
+            left_features_[index]->set_map_point(map_point);
+            right_features_[index]->set_map_point(map_point);
+        }
+
+        Sophus::SE3d Pose() const { return pose_; }
+        void SetPose(const Sophus::SE3d &pose) { pose_ = pose; }
+
         void SetKeyFrame() {
-            static long keyframe_factory_id = 0;
+            static unsigned long factory_id = 0;
+            keyframe_id = factory_id++;
             is_keyframe_ = true;
-            keyframe_id_ = keyframe_factory_id++;
+        }
+        bool is_keyframe() const { return is_keyframe_; }
+
+        unsigned long key_frame_id() const { return keyframe_id; }
+
+    private:
+        Frame(unsigned long id, cv::Mat left_img, cv::Mat right_img): id_(id), left_img_(std::move(left_img)),
+                                                             right_img_(std::move(right_img)) {
         }
 
-        /// 工厂构建模式，分配id
-        static std::shared_ptr<Frame> CreateFrame() {
-            static long factory_id = 0;
-            auto id = factory_id++;
-            return std::make_shared<Frame>(id);
-        }
+        const unsigned long id_;
+        const cv::Mat left_img_, right_img_; // stereo images
+
+        std::vector<std::shared_ptr<Feature> > left_features_;
+        std::vector<std::shared_ptr<Feature> > right_features_;
+        bool is_keyframe_ = false;
+        unsigned long keyframe_id = 0;
+        Sophus::SE3d pose_;
     };
+}
 
-}  // namespace myslam
-
-#endif //SLAMBOOK2_REMAKE_FRAME_H
+#endif //FRAME_H

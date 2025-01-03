@@ -1,34 +1,34 @@
 #include "viewer.h"
+
+#include <pangolin/pangolin.h>
 #include <opencv2/opencv.hpp>
 #include <glog/logging.h>
-#include <pangolin/pangolin.h>
-
+#include <sophus/se3.hpp>
 #include "map.h"
 #include "frame.h"
-#include "feature.h"
+#include "map_point.h"
 
 namespace myslam {
-
-    Viewer::Viewer() {
+    Viewer::Viewer(std::shared_ptr<Map> map): map_(std::move(map)) {
         viewer_thread_ = std::thread(std::bind(&Viewer::ThreadLoop, this));
+    }
+
+    void Viewer::AddCurrentFrame(std::shared_ptr<Frame> frame) {
+        std::unique_lock<std::mutex> lock(mutex_);
+        current_frame_ = std::move(frame);
+    }
+
+    void Viewer::UpdateMap() {
+        std::unique_lock<std::mutex> lock(mutex_);
+        assert(map_ != nullptr);
+        assert(map_ != nullptr);
+        active_keyframes_ = map_->GetActiveKeyFrames();
+        active_landmarks_ = map_->GetActiveMapPoints();
     }
 
     void Viewer::Close() {
         viewer_running_ = false;
         viewer_thread_.join();
-    }
-
-    void Viewer::AddCurrentFrame(std::shared_ptr<Frame> current_frame) {
-        std::unique_lock<std::mutex> lck(viewer_data_mutex_);
-        current_frame_ = current_frame;
-    }
-
-    void Viewer::UpdateMap() {
-        std::unique_lock<std::mutex> lck(viewer_data_mutex_);
-        assert(map_ != nullptr);
-        active_keyframes_ = map_->GetActiveKeyFrames();
-        active_landmarks_ = map_->GetActiveMapPoints();
-        map_updated_ = true;
     }
 
     void Viewer::ThreadLoop() {
@@ -38,27 +38,28 @@ namespace myslam {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         pangolin::OpenGlRenderState vis_camera(
-                pangolin::ProjectionMatrix(1024, 768, 400, 400, 512, 384, 0.1, 1000),
-                pangolin::ModelViewLookAt(0, -5, -10, 0, 0, 0, 0.0, -1.0, 0.0));
+            pangolin::ProjectionMatrix(1024, 768, 400, 400, 512, 384, 0.1, 1000),
+            pangolin::ModelViewLookAt(0, -5, -10, 0, 0, 0, 0.0, -1.0, 0.0));
 
         // Add named OpenGL viewport to window and provide 3D Handler
-        pangolin::View& vis_display =
+        pangolin::View &vis_display =
                 pangolin::CreateDisplay()
-                        .SetBounds(0.0, 1.0, 0.0, 1.0, -1024.0f / 768.0f)
-                        .SetHandler(new pangolin::Handler3D(vis_camera));
+                .SetBounds(0.0, 1.0, 0.0, 1.0, -1024.0f / 768.0f)
+                .SetHandler(new pangolin::Handler3D(vis_camera));
 
-        const float blue[3] = {0, 0, 1};
-        const float green[3] = {0, 1, 0};
+        constexpr float green[3] = {0, 1, 0};
 
         while (!pangolin::ShouldQuit() && viewer_running_) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
             vis_display.Activate(vis_camera);
 
-            std::unique_lock<std::mutex> lock(viewer_data_mutex_);
+            std::unique_lock<std::mutex> lock(mutex_);
             if (current_frame_) {
                 DrawFrame(current_frame_, green);
-                FollowCurrentFrame(vis_camera);
+                Sophus::SE3d Twc = current_frame_->Pose().inverse();
+                pangolin::OpenGlMatrix m(Twc.matrix());
+                vis_camera.Follow(m, true);
 
                 cv::Mat img = PlotFrameImage();
                 cv::imshow("image", img);
@@ -76,40 +77,22 @@ namespace myslam {
         LOG(INFO) << "Stop viewer";
     }
 
-    cv::Mat Viewer::PlotFrameImage() {
-        cv::Mat img_out;
-        cv::cvtColor(current_frame_->left_img_, img_out, cv::COLOR_GRAY2BGR);
-        for (size_t i = 0; i < current_frame_->features_left_.size(); ++i) {
-            if (current_frame_->features_left_[i]->map_point_.lock()) {
-                auto feat = current_frame_->features_left_[i];
-                cv::circle(img_out, feat->position_.pt, 2, cv::Scalar(0, 250, 0),
-                           2);
-            }
-        }
-        return img_out;
-    }
-
-    void Viewer::FollowCurrentFrame(pangolin::OpenGlRenderState& vis_camera) {
-        Sophus::SE3d Twc = current_frame_->Pose().inverse();
-        pangolin::OpenGlMatrix m(Twc.matrix());
-        vis_camera.Follow(m, true);
-    }
-
-    void Viewer::DrawFrame(std::shared_ptr<Frame> frame, const float* color) {
+    void Viewer::DrawFrame(const std::shared_ptr<Frame> &frame, const float *color) {
         Sophus::SE3d Twc = frame->Pose().inverse();
-        const float sz = 1.0;
-        const int line_width = 2.0;
-        const float fx = 400;
-        const float fy = 400;
-        const float cx = 512;
-        const float cy = 384;
-        const float width = 1080;
-        const float height = 768;
+
+        constexpr float sz = 1.0;
+        constexpr int line_width = 2.0;
+        constexpr float fx = 400;
+        constexpr float fy = 400;
+        constexpr float cx = 512;
+        constexpr float cy = 384;
+        constexpr float width = 1080;
+        constexpr float height = 768;
 
         glPushMatrix();
 
-        Sophus::Matrix4f m = Twc.matrix().template cast<float>();
-        glMultMatrixf((GLfloat*)m.data());
+        Sophus::Matrix4f m = Twc.matrix().cast<float>();
+        glMultMatrixf((GLfloat *) m.data());
 
         if (color == nullptr) {
             glColor3f(1, 0, 0);
@@ -143,15 +126,15 @@ namespace myslam {
         glPopMatrix();
     }
 
-    void Viewer::DrawMapPoints() {
-        const float red[3] = {1.0, 0, 0};
-        for (auto& kf : active_keyframes_) {
+    void Viewer::DrawMapPoints() const {
+        constexpr float red[3] = {1.0, 0, 0};
+        for (auto &kf: active_keyframes_) {
             DrawFrame(kf.second, red);
         }
 
         glPointSize(2);
         glBegin(GL_POINTS);
-        for (auto& landmark : active_landmarks_) {
+        for (auto &landmark: active_landmarks_) {
             auto pos = landmark.second->Pos();
             glColor3f(red[0], red[1], red[2]);
             glVertex3d(pos[0], pos[1], pos[2]);
@@ -159,4 +142,15 @@ namespace myslam {
         glEnd();
     }
 
-}  // namespace myslam
+    cv::Mat Viewer::PlotFrameImage() const {
+        cv::Mat img_out;
+        cv::cvtColor(current_frame_->left_img(), img_out, cv::COLOR_GRAY2RGB);
+        for (size_t i = 0; i < current_frame_->left_features().size(); ++i) {
+            if (current_frame_->left_features()[i]->map_point()) {
+                auto feat = current_frame_->left_features()[i];
+                cv::circle(img_out, feat->keypoint().pt, 2, cv::Scalar(0, 250, 0), 2);
+            }
+        }
+        return img_out;
+    }
+}

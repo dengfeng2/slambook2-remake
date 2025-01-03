@@ -1,137 +1,73 @@
-#ifndef SLAMBOOK2_REMAKE_FRONTEND_H
-#define SLAMBOOK2_REMAKE_FRONTEND_H
+#ifndef FRONTEND_H
+#define FRONTEND_H
 
+#include <memory>
 #include <Eigen/Core>
+#include <opencv2/opencv.hpp>
+#include <sophus/se3.hpp>
+
+#include "backend.h"
+#include "visual_odometry.h"
 
 namespace myslam {
-
-    class Backend;
+    struct Camera;
+    class Frame;
+    class Map;
     class Viewer;
+    class Backend;
 
-
-
-/**
- * 前端
- * 估计当前帧Pose，在满足关键帧条件时向地图加入关键帧并触发优化
- */
     class Frontend {
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-        Frontend();
+        Frontend(std::shared_ptr<Camera> camera_left, std::shared_ptr<Camera> camera_right, std::shared_ptr<Map> map, std::shared_ptr<Viewer> viewer, std::shared_ptr<Backend> backend_);
 
-        /// 外部接口，添加一个帧并计算其定位结果
-        bool AddFrame(Frame::Ptr frame);
-
-        /// Set函数
-        void SetMap(Map::Ptr map) { map_ = map; }
-
-        void SetBackend(std::shared_ptr<Backend> backend) { backend_ = backend; }
-
-        void SetViewer(std::shared_ptr<Viewer> viewer) { viewer_ = viewer; }
+        bool AddFrame(std::shared_ptr<Frame> frame);
 
         FrontendStatus GetStatus() const { return status_; }
-
-        void SetCameras(Camera::Ptr left, Camera::Ptr right) {
-            camera_left_ = left;
-            camera_right_ = right;
-        }
-
     private:
-        /**
-         * Track in normal mode
-         * @return true if success
-         */
-        bool Track();
-
-        /**
-         * Reset when lost
-         * @return true if success
-         */
-        bool Reset();
-
-        /**
-         * Track with last frame
-         * @return num of tracked points
-         */
-        int TrackLastFrame();
-
-        /**
-         * estimate current frame's pose
-         * @return num of inliers
-         */
-        int EstimateCurrentPose();
-
-        /**
-         * set current frame as a keyframe and insert it into backend
-         * @return true if success
-         */
-        bool InsertKeyframe();
-
-        /**
-         * Try init the frontend with stereo images saved in current_frame_
-         * @return true if success
-         */
         bool StereoInit();
 
-        /**
-         * Detect features in left image in current_frame_
-         * keypoints will be saved in current_frame_
-         * @return
-         */
-        int DetectFeatures();
+        bool Track();
 
-        /**
-         * Find the corresponding features in right image of current_frame_
-         * @return num of features found
-         */
-        int FindFeaturesInRight();
+        bool Reset();
 
-        /**
-         * Build the initial map with single image
-         * @return true if succeed
-         */
-        bool BuildInitMap();
+        // 检测左图特征点
+        size_t DetectFeatures() const;
 
-        /**
-         * Triangulate the 2D points in current frame
-         * @return num of triangulated points
-         */
-        int TriangulateNewPoints();
+        // 使用光流法检测右图特征点
+        int FindFeaturesInRight() const;
 
-        /**
-         * Set the features in keyframe as new observation of the map points
-         */
-        void SetObservationsForKeyFrame();
+        // 根据左右图特征点，使用三角测量，得到空间三维点
+        void BuildInitMap() const;
 
-        // data
-        FrontendStatus status_ = FrontendStatus::INITING;
+        int TrackLastFrame() const;
 
-        Frame::Ptr current_frame_ = nullptr;  // 当前帧
-        Frame::Ptr last_frame_ = nullptr;     // 上一帧
-        Camera::Ptr camera_left_ = nullptr;   // 左侧相机
-        Camera::Ptr camera_right_ = nullptr;  // 右侧相机
+        size_t EstimateCurrentPose() const;
 
-        Map::Ptr map_ = nullptr;
-        std::shared_ptr<Backend> backend_ = nullptr;
-        std::shared_ptr<Viewer> viewer_ = nullptr;
+        void InsertKeyFrame() const;
 
-        SE3 relative_motion_;  // 当前帧与上一帧的相对运动，用于估计当前帧pose初值
+        void SetObservationsForKeyFrame() const;
 
-        int tracking_inliers_ = 0;  // inliers, used for testing new keyframes
+        size_t TriangulateNewPoints() const;
 
-        // params
-        int num_features_ = 200;
-        int num_features_init_ = 100;
-        int num_features_tracking_ = 50;
-        int num_features_tracking_bad_ = 20;
-        int num_features_needed_for_keyframe_ = 80;
+        std::shared_ptr<Frame> current_frame_;
+        std::shared_ptr<Frame> last_frame_;
+        Sophus::SE3d relative_motion_; // 相对上一帧的运动
+        FrontendStatus status_{FrontendStatus::INITIALIZING};
 
-        // utilities
-        cv::Ptr<cv::GFTTDetector> gftt_;  // feature detector in opencv
+        const int num_features_init_{50};
+        const int num_features_{150};
+        const std::shared_ptr<Camera> camera_left_;
+        const std::shared_ptr<Camera> camera_right_;
+        const std::shared_ptr<Map> map_;
+        const std::shared_ptr<Viewer> viewer_;
+        const std::shared_ptr<Backend> backend_;
+        cv::Ptr<cv::GFTTDetector> gftt_;
+        const int num_features_tracking_{50};
+        const int num_features_tracking_bad_{20};
+        const int num_features_needed_for_keyframe_{80};
     };
+}
 
-}  // namespace myslam
-
-
-#endif //SLAMBOOK2_REMAKE_FRONTEND_H
+#endif //FRONTEND_H
